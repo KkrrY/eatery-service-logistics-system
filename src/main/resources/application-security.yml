@@ -1,0 +1,12 @@
+security:
+  auth:
+    allowedResources: >
+      /css/**,
+      /js/**,
+      /images/**,
+      /webjars/**,
+      /static/**,
+      /public/**,
+      /resources/**,
+      /favicon.ico
+  

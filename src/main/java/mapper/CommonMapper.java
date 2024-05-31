@@ -15,7 +15,7 @@ public class CommonMapper {
 
     private final ModelMapper modelMapper;
 
-    <T, S> S convertToEntity(T data, Class<S> type) {
+    public <T, S> S convertToEntity(T data, Class<S> type) {
         return modelMapper.map(data, type);
     }
 

@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static constants.ErrorMessage.INVALID_JWT_TOKEN;
+import static constants.LoggingConstants.*;
 
 @Component
 @RequiredArgsConstructor
@@ -26,14 +27,29 @@ public class JwtFilter extends GenericFilterBean {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+
         String token = jwtProvider.resolveToken((HttpServletRequest) servletRequest);
+        String className = this.getClass().getName();
+        if (token == null) {
+            request.setAttribute(TOKEN_STATUS, String.format("Class %s : NULL TOKEN",className ));
+        } else {
+            try {
+                jwtProvider.validateToken(token);
+                request.setAttribute(TOKEN_STATUS, String.format("Class %s : VALID TOKEN", className ));
+            } catch (Exception ignored) {
+                request.setAttribute(TOKEN_STATUS, String.format("Class %s : INVALID TOKEN", className ));
+            }
+        }
+
         try {
-            log.info("Request filter with JWT ...");
+
             if (token != null && jwtProvider.validateToken(token)) {
-                log.info("JWT token filter invoked. Creating authentication from token ...");
+
                 Authentication authentication = jwtProvider.getAuthentication(token);
 
                 if (authentication != null) {
+                    request.setAttribute("authenticationPrincipal", authentication.getPrincipal());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
@@ -42,6 +58,9 @@ public class JwtFilter extends GenericFilterBean {
             ((HttpServletResponse) servletResponse).sendError(e.getHttpStatus().value());
             throw new JwtAuthenticationException(INVALID_JWT_TOKEN);
         }
-        filterChain.doFilter(servletRequest, servletResponse);
+        filterChain.doFilter(
+                servletRequest, //servletRequest,
+                servletResponse);
     }
+
 }

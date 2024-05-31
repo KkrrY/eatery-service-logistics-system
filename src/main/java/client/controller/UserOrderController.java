@@ -5,6 +5,8 @@ import entity.Orders;
 import entity.User;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +17,7 @@ import constants.OrderStatus;
 import java.util.List;
 import java.util.Optional;
 
-import static constants.PathConstants.*;
+import static client.constants.PathConstants.*;
 
 @Controller
 @RequestMapping(RECENT_ORDERS) // Set a distinct base URL for user-related actions
@@ -32,12 +34,15 @@ public class UserOrderController {
         this.props = props;
     }
 
-    @GetMapping(ORDERS)
+    @GetMapping(ORDER_PROCESSING)
     public String ordersForUser(@SessionAttribute User user, Model model) {
 
         //TODO: fix user (Use authPrincipal obj) because it should be got from @AuthenticationPrincipal
 //        user = userRepository.findByUsername(principal.getName())
 //                .orElseThrow(() -> new ApiRequestException("EMAIL_NOT_FOUND", HttpStatus.NOT_FOUND));;
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        authentication.getAuthorities().forEach( i -> System.out.println(i.getAuthority()));
 
         Pageable pageable = PageRequest.of(0, props.getPageSize());
         List<Orders> ordersList = orderRepo.findByUserNameOrderByPlacedAtDesc(user.getUsername(), pageable);
@@ -49,12 +54,12 @@ public class UserOrderController {
     }
 
 
-    @PostMapping(CANCEL_ORDER)
+    @PostMapping(ORDER_CANCELLING)
     public String cancelOrder(@PathVariable Long orderId, Model model) {
 
         Optional<Orders> optionalOrder = orderRepo.findById(orderId);
         System.out.println(optionalOrder.get().getId());
-        
+
         if (optionalOrder.isPresent()) {
             Orders order = optionalOrder.get();
 
@@ -70,7 +75,7 @@ public class UserOrderController {
             }
         }
 
-        return REDIRECT_RECENT_ORDERS;
+        return "redirect:" + RECENT_ORDERS;
     }
 
 }

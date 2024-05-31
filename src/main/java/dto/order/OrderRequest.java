@@ -3,6 +3,7 @@ package dto.order;
 import constants.OrderStatus;
 import dto.burger.BurgerRequest;
 import dto.dish.DishRequest;
+import dto.user.UserRequest;
 import entity.Burger;
 import entity.Dishes;
 import entity.User;
@@ -44,7 +45,7 @@ public class OrderRequest {
 
     private OrderStatus status;
 
-    private User user;
+    private UserRequest user;
 
     private List<BurgerRequest> burgers = new ArrayList<>();
 

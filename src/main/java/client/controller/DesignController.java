@@ -11,12 +11,9 @@ import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import repository.IngredientRepository;
 import entity.Ingredient.Type;
-import repository.UserRepository;
 import service.DiscountService;
-import service.impl.DiscountServiceImpl;
-import static client.constants.ResourceUrl.RESOURCE_SERVER_URL;
+import static client.constants.UtilConstants.RESOURCE_SERVER_URL;
 import static constants.PathConstants.*;
 
 import java.util.ArrayList;
@@ -24,21 +21,23 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static client.constants.PathConstants.*;
+
 @Controller
-@RequestMapping("/design")
+@RequestMapping(BURGER_BUILDER_MAPPING)
 @SessionAttributes("order")
 @Slf4j
 public class DesignController {
 
-    private final RestTemplate restTemplate;
+    private final RestTemplate clientRestTemplate;
 
     private DiscountService discountService;
 
     @Autowired
     public DesignController(
-            RestTemplate restTemplate,
+            RestTemplate clientRestTemplate,
             DiscountService discountService) {
-        this.restTemplate = restTemplate;
+        this.clientRestTemplate = clientRestTemplate;
         this.discountService = discountService;
     }
 
@@ -47,7 +46,7 @@ public class DesignController {
         List<Ingredient> ingredients = new ArrayList<>();
         List.of(
                 Objects.requireNonNull(
-                        restTemplate.getForObject(RESOURCE_SERVER_URL + API_V1_INGREDIENT + INGREDIENTS, Ingredient[].class)
+                        clientRestTemplate.getForObject(RESOURCE_SERVER_URL + API_V1_INGREDIENT + INGREDIENTS, Ingredient[].class)
                                         )
                 )
                 .forEach(i -> ingredients.add(i));
@@ -88,7 +87,7 @@ public class DesignController {
                 .sum()  * discountService.calculateDiscount() )
         );
 
-        return "redirect:/orders/current";
+        return "redirect:" + ORDERS_CURRENT;
     }
 
     private List<Ingredient> filterByType(

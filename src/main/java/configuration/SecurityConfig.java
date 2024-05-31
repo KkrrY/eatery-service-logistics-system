@@ -1,6 +1,9 @@
 package configuration;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import client.interceptor.JwtPageVisitInterceptor;
+import constants.SecurityConstants;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,51 +13,57 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import security.JwtConfigurer;
 import security.oauth2.CustomOAuth2UserService;
 import security.oauth2.OAuth2SuccessHandler;
 
+import static client.constants.PathConstants.*;
+import static constants.PathConstants.GUEST_ALLOWED_RESOURCES;
+
+
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+@RequiredArgsConstructor
+public class SecurityConfig implements WebMvcConfigurer{
 
+
+    private final SecurityConstants securityConstants;
     private final JwtConfigurer jwtConfigurer;
     private final OAuth2SuccessHandler oauthSuccessHandler;
     private final CustomOAuth2UserService oAuth2UserService;
+    private final JwtPageVisitInterceptor jwtPageVisitInterceptor;
 
-    public SecurityConfig(JwtConfigurer jwtConfigurer, OAuth2SuccessHandler oauthSuccessHandler, CustomOAuth2UserService oAuth2UserService) {
-        this.jwtConfigurer = jwtConfigurer;
-        this.oauthSuccessHandler = oauthSuccessHandler;
-        this.oAuth2UserService = oAuth2UserService;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                //.authenticationProvider( authenticationProvider )
-                //.headers(headers -> headers.contentTypeOptions(content -> content.disable()))
-                //.cors(cors -> cors.disable())
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                //.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) //doesn't remember the user
                 .authorizeHttpRequests((authorizeHttpRequests) ->
                                 authorizeHttpRequests
-//                                        .requestMatchers(
-//                                                "/register",
-//                                                "/",
-//                                                "/design",
-//                                                "/dishes",
-//                                                "/orders",
-//                                                "/orders/current"
-//                                        ).permitAll()
-//                                        .requestMatchers("/recent-orders/orders").hasRole("USER")
-//                                        .anyRequest().hasRole("ADMIN")
-                                        .requestMatchers("/sensors").hasAnyRole("USER")
-                                        .requestMatchers("/register", "/login").permitAll()
-                                        .anyRequest().permitAll()
-
+                                        .requestMatchers(CLIENT_ALLOWED_GUEST_USERS_RESOURCES).permitAll()
+                                        .requestMatchers(CLIENT_ALLOWED_AUTHORIZED_RESOURCES).hasAnyAuthority("USER")
+                                        .requestMatchers(GUEST_ALLOWED_RESOURCES).permitAll()
+                                        .requestMatchers(securityConstants.getAllowedResources()).permitAll() //allow access to static resources
+                                        .requestMatchers(
+                                                PathRequest
+                                                        .toStaticResources()
+                                                        .atCommonLocations()
+                                        ).permitAll()
+                                        //.anyRequest().permitAll()
+                                        .anyRequest().hasRole("ADMIN")
                 )
+                .addFilterBefore(jwtPageVisitInterceptor, UsernamePasswordAuthenticationFilter.class)
+//                .logout( //client-related
+//                        logout -> logout
+//                                .logoutRequestMatcher(new AntPathRequestMatcher("/logouts"))
+//                                .logoutSuccessUrl(HOME)
+//                                .permitAll()
+//                )
                 .oauth2Login(
                         oauth -> oauth
                             //.loginPage("/login")
@@ -65,11 +74,6 @@ public class SecurityConfig {
                                     endpoint -> endpoint.userService(oAuth2UserService)
                             )
                             .successHandler(oauthSuccessHandler)
-                )
-                .logout(
-                        logout -> logout
-                                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                                .permitAll()
                 )
                 .apply(jwtConfigurer)
                 ;

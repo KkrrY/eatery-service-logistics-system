@@ -6,7 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/profile")
+import static client.constants.PathConstants.*;
+
+@RequestMapping(USER_PROFILE)
 @Controller
 public class UserProfileController {
     @GetMapping

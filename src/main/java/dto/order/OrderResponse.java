@@ -4,6 +4,7 @@ import constants.OrderStatus;
 import dto.burger.BurgerRequest;
 import dto.burger.BurgerResponse;
 import dto.dish.DishResponse;
+import dto.user.UserResponse;
 import entity.Burger;
 import entity.Dishes;
 import entity.User;
@@ -53,7 +54,7 @@ public class OrderResponse {
 
     private OrderStatus status;
 
-    private User user;
+    private UserResponse user;
 
     private List<BurgerResponse> burgers = new ArrayList<>();
 

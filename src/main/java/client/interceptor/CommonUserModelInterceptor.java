@@ -1,10 +1,7 @@
 package client.interceptor;
 
 import dto.auth.AuthenticationResponse;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import security.JwtProvider;
-import security.UserPrincipal;
 import entity.Orders;
 import entity.User;
 import enums.Role;
@@ -16,10 +13,9 @@ import repository.UserRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.security.Principal;
-import java.util.InputMismatchException;
-import java.util.Optional;
 import java.util.Set;
+
+import static client.constants.UtilConstants.*;
 
 @Component
 public class CommonUserModelInterceptor implements HandlerInterceptor { //now add to config
@@ -35,12 +31,12 @@ public class CommonUserModelInterceptor implements HandlerInterceptor { //now ad
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         HttpSession session = request.getSession();
-        AuthenticationResponse authenticationResponse = (AuthenticationResponse) session.getAttribute("authenticationResponse");
-        if (authenticationResponse != null) session.setAttribute("token", authenticationResponse.getToken());
+        AuthenticationResponse authenticationResponse = (AuthenticationResponse) session.getAttribute(AUTHENTICATION_RESPONSE);
+        if (authenticationResponse != null) session.setAttribute(TOKEN_ATTRIBUTE, authenticationResponse.getToken());
         User user = getUser(request);
-        session.setAttribute("order", getOrder(user.getUsername()));
-        session.setAttribute("user", user);
-        request.setAttribute("user", user);
+        session.setAttribute(ORDER_ATTRIBUTE, getOrder(user.getUsername()));
+        session.setAttribute(USER_ATTRIBUTE, user);
+        request.setAttribute(USER_ATTRIBUTE, user);
 
         return true;
     }
@@ -53,23 +49,23 @@ public class CommonUserModelInterceptor implements HandlerInterceptor { //now ad
 
     private User getUser(HttpServletRequest request) {
         HttpSession session = request.getSession();
-
-        String token = (String) session.getAttribute("token");
+        AuthenticationResponse authenticationResponse = (AuthenticationResponse) session.getAttribute(AUTHENTICATION_RESPONSE);
+        String token = (String) session.getAttribute(TOKEN_ATTRIBUTE);
         //Authentication authentication = jwtProvider.getAuthentication(token);
         String username = "";
         try {
-            username = jwtProvider.getUsername(token);
-        } catch (IllegalArgumentException ignored) {}
+            username = jwtProvider.getUsername(token); //TODO: refactor
+        } catch (Exception ignored) {}
         User user = userRepository.findByUsername(username
         ).orElse(null);
         if (user == null) {
             user = new User();
             user.setUsername("Guest");
-            user.setZip("Guest");
-            user.setCity("Guest");
-            user.setCountry("Guest");
-            user.setFirstName("Guest");
-            user.setLastName("Guest");
+            user.setZip("");
+            user.setCity("");
+            user.setCountry("");
+            user.setFirstName("");
+            user.setLastName("");
             user.setRoles(Set.of(Role.GUEST));
         }
         return user;

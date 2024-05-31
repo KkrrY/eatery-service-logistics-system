@@ -33,7 +33,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = (String) oAuth2User.getAttributes().get("email");
         String token = jwtProvider.createToken(email, "USER");
-        String uri = UriComponentsBuilder.fromUriString("http://" + hostname + "/oauth2/redirect")
+        String uri = UriComponentsBuilder.fromUriString("http://" + hostname + "/oauth2/redirect") //client server
                 .queryParam("token", token)
                 .build().toUriString();
 

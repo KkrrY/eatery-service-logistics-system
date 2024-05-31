@@ -14,19 +14,20 @@ import org.springframework.web.client.RestTemplate;
 import service.DiscountService;
 
 import static constants.PathConstants.*;
-import static client.constants.ResourceUrl.RESOURCE_SERVER_URL;
+import static client.constants.PathConstants.*;
+import static client.constants.UtilConstants.RESOURCE_SERVER_URL;
 
 @Controller
-@RequestMapping("/orders")
+@RequestMapping(ORDER_PROCESSING)
 @SessionAttributes("order")
 public class OrdersController {
 
-    private RestTemplate restTemplate;
+    private RestTemplate clientRestTemplate;
     private DiscountService discountService;
 
-    public OrdersController(DiscountService discountService, RestTemplate restTemplate) {
+    public OrdersController(DiscountService discountService, RestTemplate clientRestTemplate) {
         this.discountService = discountService;
-        this.restTemplate = restTemplate;
+        this.clientRestTemplate = clientRestTemplate;
     }
 
     @ModelAttribute(name = "discount")
@@ -34,7 +35,7 @@ public class OrdersController {
         return String.valueOf( Math.round( (1 - discountService.calculateDiscount() ) * 100 ) );
     }
 
-    @GetMapping("/current")
+    @GetMapping(CURRENT_ORDER)
     public String orderForm(@SessionAttribute User user,
                             @SessionAttribute Orders order) {
 
@@ -73,10 +74,10 @@ public class OrdersController {
         }
         order.setUser(user);
         //can put here any object with equal by namings and types fields (if they're convertable with mapper)
-        restTemplate.postForObject(RESOURCE_SERVER_URL + API_V1_ORDER, order, OrderResponse.class);
+        clientRestTemplate.postForObject(RESOURCE_SERVER_URL + API_V1_ORDER, order, OrderResponse.class);
         sessionStatus.setComplete();
 
-        return "redirect:/";
+        return "redirect:" + HOME;
     }
 
 }

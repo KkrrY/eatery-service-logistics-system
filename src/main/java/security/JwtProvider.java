@@ -4,6 +4,7 @@ import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Base64;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.logging.Logger;
 
 import static constants.ErrorMessage.INVALID_JWT_TOKEN;
 
@@ -78,6 +81,7 @@ public class JwtProvider {
     }
 
     public String resolveToken(HttpServletRequest request) {
+
         return request.getHeader(authorizationHeader);
     }
 }

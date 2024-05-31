@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import repository.UserRepository;
 import security.JwtProvider;
+import security.UserPrincipal;
 import security.oauth2.OAuth2UserInfo;
 import service.AuthenticationService;
 import service.email.MailSender;
@@ -57,9 +60,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public Map<String, Object> login(String email, String password) {
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
             User user = userRepository.findByUsername(email)
                     .orElseThrow(() -> new ApiRequestException(EMAIL_NOT_FOUND, HttpStatus.NOT_FOUND));
+
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password ));
+
             String userRole = user.getRoles().iterator().next().name();
             String token = jwtProvider.createToken(email, userRole);
             Map<String, Object> response = new HashMap<>();

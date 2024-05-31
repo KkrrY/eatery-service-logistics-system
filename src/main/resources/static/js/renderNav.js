@@ -6,7 +6,13 @@ renderNavigation();
 setInterval(renderNavigation, 1000000 )
 
 function renderNavigation(){
-     fetch("/user-role").then(resp => resp.json()).then(data =>{
+     fetch("/user-role",
+         {
+          method: 'GET', mode: 'no-cors',
+          headers: {
+               'Access-Control-Allow-Origin': '*'
+          }
+     }).then(resp => resp.json()).then(data =>{
           console.log(data);
           if(data == true){
                loginLink.classList.add("hidden");
@@ -23,7 +29,15 @@ function renderNavigation(){
                registrationLink.classList.remove("hidden")
           }
 
-     })
+     }).catch(
+         error => {
+              console.log(error)
+              logoutLink.classList.add("hidden")
+              history.classList.add("hidden")
+              loginLink.classList.remove("hidden")
+              registrationLink.classList.remove("hidden")
+         }
+     )
 }
 
 

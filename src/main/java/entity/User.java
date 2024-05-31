@@ -2,6 +2,7 @@ package entity;
 
 import enums.AuthProvider;
 import enums.Role;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Data;
